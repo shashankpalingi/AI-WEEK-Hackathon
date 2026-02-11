@@ -4,6 +4,7 @@ from watchdog.events import FileSystemEventHandler
 from extractor import extract_text
 from ai_engine import generate_embedding
 from cluster_engine import add_file, print_clusters
+from cluster_engine import sync_folders
 
 
 class FileHandler(FileSystemEventHandler):
@@ -19,7 +20,7 @@ class FileHandler(FileSystemEventHandler):
             print(f"File deleted: {event.src_path}")
 
     def process_file(self, event):
-        if not event.is_directory:
+        if not event.is_directory and "cluster_" not in event.src_path:
             print(f"Processing file: {event.src_path}")
             content = extract_text(event.src_path)
             if content:
@@ -33,6 +34,10 @@ class FileHandler(FileSystemEventHandler):
 
                     add_file(event.src_path, embedding)
                     print_clusters()
+
+                    sync_folders("root_files")
+
+                    sync_folders("root_files")
 
                     print("=" * 50)
 

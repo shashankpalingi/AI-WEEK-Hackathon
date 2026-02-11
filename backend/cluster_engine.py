@@ -1,5 +1,8 @@
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+import os
+import shutil
+
 
 # Store embeddings in memory
 file_embeddings = {}
@@ -45,3 +48,23 @@ def print_clusters():
         for f in files:
             print(f" - {f}")
     print("=" * 50)
+
+
+def sync_folders(root_path):
+    """
+    Create semantic folders and move files accordingly
+    """
+
+    # Create new cluster folders
+    for cluster_id, files in clusters.items():
+        cluster_folder = os.path.join(root_path, f"cluster_{cluster_id}")
+        os.makedirs(cluster_folder, exist_ok=True)
+
+        for file_path in files:
+            if os.path.exists(file_path):
+                filename = os.path.basename(file_path)
+                new_path = os.path.join(cluster_folder, filename)
+
+                # Move file if not already there
+                if not os.path.exists(new_path):
+                    shutil.move(file_path, new_path)

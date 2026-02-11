@@ -1,3 +1,0 @@
-React is a frontend JavaScript library used for building user interfaces.
-Hooks like useState and useEffect manage state and lifecycle.
- reaact

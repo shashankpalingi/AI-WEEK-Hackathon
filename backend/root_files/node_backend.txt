@@ -1,3 +1,0 @@
-Node.js is used for building backend servers.
-Express helps create REST APIs.
-node
