@@ -3,6 +3,8 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from extractor import extract_text
 from ai_engine import generate_embedding
+from cluster_engine import add_file, print_clusters
+
 
 class FileHandler(FileSystemEventHandler):
 
@@ -28,6 +30,10 @@ class FileHandler(FileSystemEventHandler):
                 embedding = generate_embedding(content)
                 if embedding:
                     print(f"Embedding generated. Vector length: {len(embedding)}")
+
+                    add_file(event.src_path, embedding)
+                    print_clusters()
+
                     print("=" * 50)
 
 
