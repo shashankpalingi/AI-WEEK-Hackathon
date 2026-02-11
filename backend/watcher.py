@@ -2,6 +2,7 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from extractor import extract_text
+from ai_engine import generate_embedding
 
 class FileHandler(FileSystemEventHandler):
 
@@ -23,6 +24,12 @@ class FileHandler(FileSystemEventHandler):
                 print("Extracted Content Preview:")
                 print(content[:300])
                 print("-" * 40)
+
+                embedding = generate_embedding(content)
+                if embedding:
+                    print(f"Embedding generated. Vector length: {len(embedding)}")
+                    print("=" * 50)
+
 
 
 def start_watching(path):
