@@ -9,6 +9,7 @@ SIMILARITY_THRESHOLD = 0.7
 file_embeddings = {}
 clusters = {}
 
+# 3️⃣ Load storage FIRST
 storage = load_storage()
 # Rebuild clusters from storage on startup
 if storage:
@@ -56,7 +57,7 @@ def add_file(file_path, embedding):
         max_similarity = np.max(similarity_scores)
 
         print("Max similarity with cluster", cluster_id, "=", max_similarity)
-        
+
         if max_similarity >= SIMILARITY_THRESHOLD:
             clusters[cluster_id].append(file_path)
 
