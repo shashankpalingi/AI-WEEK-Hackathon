@@ -2,42 +2,67 @@ from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import threading
-from watcher import start_watching
+import os
+
+from watcher import start_watching, index_existing_files
 from cluster_engine import storage
+from extractor import extract_text
+
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
+from google import genai
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# -----------------------------
+# MODEL SETUP
+# -----------------------------
 
-import google.generativeai as genai
-import os
+embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-generator = genai.GenerativeModel("gemini-3-flash-preview")
+client = genai.Client(
+    api_key=os.getenv("GOOGLE_API_KEY")
+)
 
+GEN_MODEL = "gemini-3-flash-preview"
+
+# -----------------------------
+# PATH CONFIG
+# -----------------------------
 
 ROOT_FOLDER = os.path.join(os.path.dirname(__file__), "root_files")
 
+# -----------------------------
+# FILE READER (ROBUST)
+# -----------------------------
+
 def read_file_content(file_path):
     try:
-        # If storage saved only filename → search inside clusters
+        # If only filename stored → search inside root_files
         if not os.path.exists(file_path):
+            found = False
             for root, _, files in os.walk(ROOT_FOLDER):
                 if os.path.basename(file_path) in files:
                     file_path = os.path.join(root, os.path.basename(file_path))
+                    found = True
                     break
+            if not found:
+                print("FILE NOT FOUND IN ROOT:", file_path)
+                return ""
 
-        with open(file_path, "r", encoding="utf-8") as f:
-            content = f.read().strip()
-            print("READ FILE:", file_path, "LEN:", len(content))
-            return content
+        content = extract_text(file_path)
+        if content:
+            print(f"READ FILE: {file_path} LEN: {len(content)}")
+            return content.strip()
+        return ""
 
     except Exception as e:
         print("FILE READ ERROR:", file_path, e)
         return ""
 
+# -----------------------------
+# FASTAPI SETUP
+# -----------------------------
 
 class SearchRequest(BaseModel):
     query: str
@@ -71,12 +96,22 @@ async def websocket_endpoint(websocket: WebSocket):
         connected_clients.remove(websocket)
         print("Client disconnected")
 
+@app.get("/status")
+def system_status():
+    return {
+        "status": "running",
+        "clusters": len(storage),
+        "files_indexed": sum(len(c["files"]) for c in storage.values())
+    }
+
+# -----------------------------
+# SEARCH ENDPOINT
+# -----------------------------
+
 @app.post("/search")
 def search_files(request: SearchRequest):
 
-    query_text = request.query
-    query_embedding = model.encode(query_text)
-
+    query_embedding = embedding_model.encode(request.query)
     results = []
 
     for cluster_id, cluster_data in storage.items():
@@ -92,33 +127,51 @@ def search_files(request: SearchRequest):
                 "similarity": float(similarity)
             })
 
-    results = sorted(results, key=lambda x: x["similarity"], reverse=True)
+    results.sort(key=lambda x: x["similarity"], reverse=True)
 
     return {"results": results[:5]}
 
+# -----------------------------
+# RAG QA ENDPOINT
+# -----------------------------
+
 @app.post("/ask")
 def rag_answer(request: SearchRequest):
-    query_text = request.query
-    query_embedding = model.encode(query_text)
 
+    query_embedding = embedding_model.encode(request.query)
     scored_files = []
 
     for cluster_data in storage.values():
         for file_path, file_embedding in cluster_data["files"].items():
+
             similarity = cosine_similarity(
                 [query_embedding],
                 [file_embedding]
             )[0][0]
+
             scored_files.append((file_path, similarity))
 
     scored_files.sort(key=lambda x: x[1], reverse=True)
     top_files = scored_files[:2]
 
+    MAX_CONTEXT_CHARS = 4000
     context = ""
-    for file_path, _ in top_files:
-        context += read_file_content(file_path) + "\n"
 
-    # 🚨 VERY IMPORTANT SAFETY CHECK
+    for file_path, _ in top_files:
+        text = read_file_content(file_path)
+        
+        if len(context) + len(text) > MAX_CONTEXT_CHARS:
+            remaining = MAX_CONTEXT_CHARS - len(context)
+            # Find the last space within the remaining limit to avoid cutting mid-word
+            trunc_index = text[:remaining].rfind(" ")
+            if trunc_index == -1:
+                trunc_index = remaining
+            
+            context += text[:trunc_index] + " [TRUNCATED]..."
+            break
+        else:
+            context += text + "\n---\n"
+
     if context.strip() == "":
         return {
             "answer": "No relevant documents found in knowledge base.",
@@ -137,32 +190,52 @@ Context:
 {context}
 
 Question:
-{query_text}
+{request.query}
 
 Answer:
 """
 
-    response = generator.generate_content(prompt)
+    try:
+        # Configuration for safety and timeout
+        config = {
+            "max_output_tokens": 1024,
+            "temperature": 0.1,
+        }
 
-    answer = response.text if response.text else "Model could not generate an answer."
+        response = client.models.generate_content(
+            model=GEN_MODEL,
+            contents=prompt,
+            config=config
+        )
+
+        if not response or not response.text:
+            answer = "AI returned an empty response. Please try again."
+        else:
+            answer = response.text.strip()
+
+    except Exception as e:
+        print("LLM ERROR:", e)
+        if "429" in str(e):
+            answer = "API Rate limit exceeded. Please wait a moment."
+        elif "timeout" in str(e).lower():
+            answer = "Request timed out. The context might be too large or the service is slow."
+        else:
+            answer = "AI service temporarily unavailable or encountered an error."
 
     return {
         "answer": answer,
-        "sources": [
-            {"file": f[0], "score": float(f[1])}
-            for f in top_files
-        ]
+        "sources": [f[0] for f in top_files],
+        "confidence": "high" if context else "low"
     }
 
-
-
-
-
-# Start watcher in background thread
+# -----------------------------
+# WATCHER THREAD
+# -----------------------------
 
 def run_watcher():
+    print("Indexing existing files...")
+    index_existing_files()
+    print("Watching for new files...")
     start_watching(ROOT_FOLDER)
 
 threading.Thread(target=run_watcher, daemon=True).start()
-
-
