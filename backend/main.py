@@ -2,14 +2,42 @@ from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import threading
-import os
 from watcher import start_watching
 from cluster_engine import storage
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
+
 model = SentenceTransformer("all-MiniLM-L6-v2")
+
+import google.generativeai as genai
+import os
+
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+generator = genai.GenerativeModel("gemini-3-flash-preview")
+
+
+ROOT_FOLDER = os.path.join(os.path.dirname(__file__), "root_files")
+
+def read_file_content(file_path):
+    try:
+        # If storage saved only filename → search inside clusters
+        if not os.path.exists(file_path):
+            for root, _, files in os.walk(ROOT_FOLDER):
+                if os.path.basename(file_path) in files:
+                    file_path = os.path.join(root, os.path.basename(file_path))
+                    break
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+            print("READ FILE:", file_path, "LEN:", len(content))
+            return content
+
+    except Exception as e:
+        print("FILE READ ERROR:", file_path, e)
+        return ""
+
 
 class SearchRequest(BaseModel):
     query: str
@@ -68,14 +96,71 @@ def search_files(request: SearchRequest):
 
     return {"results": results[:5]}
 
+@app.post("/ask")
+def rag_answer(request: SearchRequest):
+    query_text = request.query
+    query_embedding = model.encode(query_text)
+
+    scored_files = []
+
+    for cluster_data in storage.values():
+        for file_path, file_embedding in cluster_data["files"].items():
+            similarity = cosine_similarity(
+                [query_embedding],
+                [file_embedding]
+            )[0][0]
+            scored_files.append((file_path, similarity))
+
+    scored_files.sort(key=lambda x: x[1], reverse=True)
+    top_files = scored_files[:2]
+
+    context = ""
+    for file_path, _ in top_files:
+        context += read_file_content(file_path) + "\n"
+
+    # 🚨 VERY IMPORTANT SAFETY CHECK
+    if context.strip() == "":
+        return {
+            "answer": "No relevant documents found in knowledge base.",
+            "sources": []
+        }
+
+    prompt = f"""
+You are a helpful assistant.
+Answer the question using ONLY the context below.
+If the answer is not in the context, say "I don't know".
+
+Context:
+{context}
+
+Question:
+{query_text}
+
+Answer:
+"""
+
+    response = generator.generate_content(prompt)
+
+    answer = response.text if response.text else "Model could not generate an answer."
+
+    return {
+        "answer": answer,
+        "sources": [f[0] for f in top_files]
+    }
+
+
+
+
+
+
 
 
 
 # Start watcher in background thread
-ROOT_FOLDER = os.path.join(os.path.dirname(__file__), "root_files")
 
 def run_watcher():
     start_watching(ROOT_FOLDER)
 
 threading.Thread(target=run_watcher, daemon=True).start()
+
 
