@@ -126,9 +126,12 @@ def rag_answer(request: SearchRequest):
         }
 
     prompt = f"""
-You are a helpful assistant.
-Answer the question using ONLY the context below.
-If the answer is not in the context, say "I don't know".
+You are an AI assistant for document-based question answering.
+
+Rules:
+- Use ONLY the provided context
+- If answer not present → say "Information not found in knowledge base"
+- Be concise and factual
 
 Context:
 {context}
@@ -145,12 +148,11 @@ Answer:
 
     return {
         "answer": answer,
-        "sources": [f[0] for f in top_files]
+        "sources": [
+            {"file": f[0], "score": float(f[1])}
+            for f in top_files
+        ]
     }
-
-
-
-
 
 
 
