@@ -101,8 +101,12 @@ def system_status():
     return {
         "status": "running",
         "clusters": len(storage),
-        "files_indexed": sum(len(c["files"]) for c in storage.values())
+        "files": sum(len(c["files"]) for c in storage.values())
     }
+
+@app.get("/clusters")
+def get_clusters():
+    return storage
 
 # -----------------------------
 # SEARCH ENDPOINT
@@ -124,7 +128,8 @@ def search_files(request: SearchRequest):
 
             results.append({
                 "file": file_path,
-                "similarity": float(similarity)
+                "similarity": float(similarity),
+                "cluster_label": cluster_data.get("label", cluster_id)
             })
 
     results.sort(key=lambda x: x["similarity"], reverse=True)
