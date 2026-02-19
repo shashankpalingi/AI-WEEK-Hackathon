@@ -20,7 +20,7 @@
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  scrollbar-color: var(--scrollbar-thumb, rgba(148, 163, 184, 0.2)) var(--scrollbar-track, transparent);
 }
 
 @utility glass-card {
@@ -43,23 +43,29 @@
 }
 
 body {
-  @apply bg-slate-950 text-slate-50 min-h-screen overflow-x-hidden;
-  background-image:
-    radial-gradient(circle at 20% 20%, rgba(30, 64, 175, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(88, 28, 135, 0.15) 0%, transparent 40%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-transparent;
+  background: var(--scrollbar-track, transparent);
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-white/10 rounded-full hover:bg-white/20;
+  background: var(--scrollbar-thumb, rgba(148, 163, 184, 0.2));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover, rgba(148, 163, 184, 0.35));
 }
 
 @utility animate-spin-slow {

@@ -14,8 +14,9 @@ ROOT_FOLDER = os.path.join(os.path.dirname(__file__), "root_files")
 SIMILARITY_THRESHOLD = 0.3
 
 
-# Logic moved to cluster_engine.py
-
+# Cache to skip re-processing unchanged files
+# format: {abs_path: last_mtime}
+file_mtime_cache = {}
 
 class FileHandler(FileSystemEventHandler):
 
@@ -34,6 +35,8 @@ class FileHandler(FileSystemEventHandler):
             for cluster_data in storage.values():
                 if file_path in cluster_data["files"]:
                     cluster_data["files"].pop(file_path)
+                    if "metadata" in cluster_data and file_path in cluster_data["metadata"]:
+                        cluster_data["metadata"].pop(file_path)
                     removed = True
                     break
             
@@ -44,40 +47,69 @@ class FileHandler(FileSystemEventHandler):
                 sync_folders(ROOT_FOLDER)
 
     def process_file(self, file_path):
-        # Ignore if file was just moved/deleted by another event/process
         if not os.path.exists(file_path):
             return
 
+        abs_path = os.path.abspath(file_path)
+        
+        # Check mtime to skip unchanged files (Feature 6)
         try:
-            content = extract_text(file_path)
-            if not content:
+            mtime = os.path.getmtime(abs_path)
+            if file_mtime_cache.get(abs_path) == mtime:
                 return
+            file_mtime_cache[abs_path] = mtime
+        except Exception:
+            pass
 
-            content = content.strip()
-            if not content:
-                return
-
-            embedding = model.encode(content)
-
-            # Use absolute path to avoid ambiguity
-            abs_path = os.path.abspath(file_path)
+        try:
+            from extractor import extract_text, chunk_text, extract_metadata
             
-            # Remove from old cluster if it exists (for re-clustering on modification)
+            content = extract_text(abs_path)
+            if not content:
+                print(f"SEFS: Skipping empty or unreadable file: {file_path}")
+                return
+
+            # Feature 1: Semantic Chunking
+            chunks = chunk_text(content, chunk_size=500, overlap=100)
+            
+            # Feature 6: Limit chunks per file (max 20)
+            if len(chunks) > 20:
+                print(f"SEFS: Truncating {file_path} to 20 chunks")
+                chunks = chunks[:20]
+
+            if not chunks:
+                return
+
+            # Feature 6: Batch embedding (using model.encode(list))
+            print(f"SEFS: Embedding {len(chunks)} chunks for {os.path.basename(file_path)}...")
+            embeddings = model.encode(chunks)
+            
+            chunks_data = []
+            for text, emb in zip(chunks, embeddings):
+                chunks_data.append({
+                    "text": text,
+                    "embedding": emb.tolist()
+                })
+
+            # Feature 3: Metadata extraction
+            metadata = extract_metadata(abs_path)
+
+            # Re-clustering: Remove from old cluster if it exists
             for cluster_data in storage.values():
                 if abs_path in cluster_data["files"]:
                     cluster_data["files"].pop(abs_path)
+                    if "metadata" in cluster_data and abs_path in cluster_data["metadata"]:
+                        cluster_data["metadata"].pop(abs_path)
                     break
 
             from cluster_engine import add_file
-            add_file(abs_path, embedding)
+            add_file(abs_path, chunks_data, metadata)
 
             # Organize folders
             sync_folders(ROOT_FOLDER)
-
             print("File processed & organized:", file_path)
 
         except FileNotFoundError:
-            # Common race condition during move operations
             pass
         except Exception as e:
             import traceback
@@ -88,7 +120,6 @@ class FileHandler(FileSystemEventHandler):
 def start_watching(path):
     event_handler = FileHandler()
     observer = Observer()
-    # Enable recursive watching so edits inside semantic folders are caught
     observer.schedule(event_handler, path=path, recursive=True)
     observer.start()
     print(f"Watching folder (recursive): {path}")
@@ -103,30 +134,14 @@ def start_watching(path):
 
 def index_existing_files():
     print("Indexing existing files...")
-
+    handler = FileHandler()
     for root, _, files in os.walk(ROOT_FOLDER):
         for file in files:
-            # Skip hidden files
             if file.startswith("."):
                 continue
                 
             path = os.path.join(root, file)
-
-            try:
-                content = extract_text(path)
-                if not content:
-                    continue
-                
-                content = content.strip()
-                if not content:
-                    continue
-
-                embedding = model.encode(content)
-                from cluster_engine import add_file
-                add_file(path, embedding, skip_naming=True)
-
-            except Exception as e:
-                print("Index error:", path, e)
+            handler.process_file(path)
 
     sync_folders(ROOT_FOLDER)
     print("Initial indexing complete.")

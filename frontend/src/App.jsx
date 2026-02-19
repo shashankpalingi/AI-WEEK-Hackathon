@@ -1,12 +1,18 @@
 import React from 'react';
-import Dashboard from './components/Dashboard';
+import SemanticWorkspace from './components/SemanticWorkspace';
+import { ThemeProvider } from './context/ThemeContext';
+import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <Dashboard />
-    </div>
+    <ThemeProvider>
+      <div className="App">
+        <SemanticWorkspace />
+      </div>
+    </ThemeProvider>
   );
 }
 
 export default App;
+
+

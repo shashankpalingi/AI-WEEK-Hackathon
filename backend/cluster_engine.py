@@ -13,20 +13,39 @@ clusters = {}
 
 # 3️⃣ Load storage FIRST
 storage = load_storage()
-# Rebuild clusters from storage on startup
+# Rebuild clusters and file_embeddings from storage on startup
+# file_embeddings now maps file_path -> mean_embedding (for clustering logic)
 if storage:
     for cluster_id, cluster_data in storage.items():
         cid = int(cluster_id)
         clusters[cid] = list(cluster_data["files"].keys())
-        for f, emb in cluster_data["files"].items():
-            file_embeddings[f] = np.array(emb)
+        for f, chunks in cluster_data["files"].items():
+            if chunks and isinstance(chunks, list):
+                # Use mean of chunk embeddings for file-level similarity check during organization
+                embs = [np.array(c["embedding"]) for c in chunks if "embedding" in c]
+                if embs:
+                    file_embeddings[f] = np.mean(embs, axis=0)
 
-def add_file(file_path, embedding, skip_naming=False):
+def add_file(file_path, chunks_data, metadata, skip_naming=False):
+    """
+    chunks_data: List of {"text": str, "embedding": list}
+    metadata: dict of file metadata
+    """
     global file_embeddings, clusters, storage
 
     file_path = os.path.abspath(file_path)
-    embedding = np.array(embedding)
-    file_embeddings[file_path] = embedding
+    
+    # Calculate file-level embedding (mean of chunks) for clustering
+    embs = [np.array(c["embedding"]) for c in chunks_data]
+    if not embs:
+        return
+    file_mean_emb = np.mean(embs, axis=0)
+    file_embeddings[file_path] = file_mean_emb
+
+    # Initialize metadata if not present
+    for cid in storage:
+        if "metadata" not in storage[cid]:
+            storage[cid]["metadata"] = {}
 
     # FIRST FILE → CREATE FIRST CLUSTER
     if not clusters:
@@ -35,9 +54,12 @@ def add_file(file_path, embedding, skip_naming=False):
 
         storage["0"] = {
             "label": label,
-            "centroid": embedding.tolist(),
+            "centroid": file_mean_emb.tolist(),
             "files": {
-                file_path: embedding.tolist()
+                file_path: chunks_data
+            },
+            "metadata": {
+                file_path: metadata
             }
         }
 
@@ -45,47 +67,64 @@ def add_file(file_path, embedding, skip_naming=False):
         return
 
     # CHECK EXISTING CLUSTERS
+    best_similarity = -1
+    best_cluster_id = -1
+
     for cluster_id, files in clusters.items():
-        existing_embeddings = [file_embeddings[f] for f in files if f in file_embeddings]
-        if not existing_embeddings: continue
+        # Get cluster centroid
+        cluster_centroid = np.array(storage[str(cluster_id)]["centroid"])
+        
+        similarity = cosine_similarity(
+            [file_mean_emb],
+            [cluster_centroid]
+        )[0][0]
 
-        similarity_scores = cosine_similarity(
-            [embedding],
-            existing_embeddings
-        )
+        print(f"Similarity with cluster {cluster_id} ({storage[str(cluster_id)]['label']}) = {similarity}")
 
-        max_similarity = np.max(similarity_scores)
+        if similarity > best_similarity:
+            best_similarity = similarity
+            best_cluster_id = cluster_id
 
-        print("Max similarity with cluster", cluster_id, "=", max_similarity)
+    if best_similarity >= SIMILARITY_THRESHOLD:
+        cluster_id = best_cluster_id
+        clusters[cluster_id].append(file_path)
 
-        if max_similarity >= SIMILARITY_THRESHOLD:
-            clusters[cluster_id].append(file_path)
+        # 🔥 ADD FILE TO STORAGE
+        storage[str(cluster_id)]["files"][file_path] = chunks_data
+        storage[str(cluster_id)]["metadata"][file_path] = metadata
 
-            # 🔥 ADD FILE TO STORAGE
-            storage[str(cluster_id)]["files"][file_path] = embedding.tolist()
-
-            # 🔥 UPDATE CENTROID
-            file_vectors = list(storage[str(cluster_id)]["files"].values())
-            centroid = np.mean(file_vectors, axis=0)
+        # 🔥 UPDATE CENTROID (Average of all file centroids in cluster)
+        all_file_embs = []
+        for f in storage[str(cluster_id)]["files"]:
+            f_chunks = storage[str(cluster_id)]["files"][f]
+            f_embs = [np.array(c["embedding"]) for c in f_chunks]
+            if f_embs:
+                all_file_embs.append(np.mean(f_embs, axis=0))
+        
+        if all_file_embs:
+            centroid = np.mean(all_file_embs, axis=0)
             storage[str(cluster_id)]["centroid"] = centroid.tolist()
 
-            # Optional: Refresh label if cluster grows significantly
-            if len(storage[str(cluster_id)]["files"]) == 5:
-                storage[str(cluster_id)]["label"] = generate_cluster_label(list(storage[str(cluster_id)]["files"].keys()))
+        # Optional: Refresh label if cluster grows
+        if len(storage[str(cluster_id)]["files"]) % 5 == 0:
+            storage[str(cluster_id)]["label"] = generate_cluster_label(list(storage[str(cluster_id)]["files"].keys()))
 
-            save_storage(storage)
-            return
+        save_storage(storage)
+        return
 
     # NO MATCH → CREATE NEW CLUSTER
-    new_cluster_id = len(clusters)
+    new_cluster_id = len(storage)
     label = generate_cluster_label([file_path]) if not skip_naming else "Refining_Label"
     clusters[new_cluster_id] = [file_path]
 
     storage[str(new_cluster_id)] = {
         "label": label,
-        "centroid": embedding.tolist(),
+        "centroid": file_mean_emb.tolist(),
         "files": {
-            file_path: embedding.tolist()
+            file_path: chunks_data
+        },
+        "metadata": {
+            file_path: metadata
         }
     }
 
@@ -141,6 +180,7 @@ def sync_folders(root_path):
             
             # If disk folder != stored label AND it's not a generic name, assume manual override
             if (actual_parent != stored_label and 
+                actual_parent != "root_files" and
                 not actual_parent.startswith("Refining_Label") and 
                 not actual_parent.startswith("cluster_")):
                 print(f"SEFS: Detected manual rename for cluster {cluster_id}: {stored_label} -> {actual_parent}")

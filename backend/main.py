@@ -1,10 +1,11 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import threading
 import os
+import shutil
 
-from watcher import start_watching, index_existing_files
+from watcher import start_watching, index_existing_files, FileHandler
 from cluster_engine import storage
 from extractor import extract_text
 
@@ -24,7 +25,7 @@ client = genai.Client(
     api_key=os.getenv("GOOGLE_API_KEY")
 )
 
-GEN_MODEL = "gemini-3-flash-preview"
+GEN_MODEL = "gemini-2.5-flash"
 
 # -----------------------------
 # PATH CONFIG
@@ -108,33 +109,97 @@ def system_status():
 def get_clusters():
     return storage
 
+@app.get("/files")
+def list_files_with_metadata():
+    """
+    Returns list of files with metadata + cluster id.
+    """
+    all_files = []
+    for cluster_id, cluster_data in storage.items():
+        metadata_map = cluster_data.get("metadata", {})
+        for file_path in cluster_data["files"]:
+            all_files.append({
+                "file": file_path,
+                "cluster_id": cluster_id,
+                "cluster_label": cluster_data.get("label", "Unknown"),
+                "metadata": metadata_map.get(file_path, {})
+            })
+    return all_files
+
+# -----------------------------
+# UPLOAD ENDPOINT
+# -----------------------------
+
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    """
+    Accepts a file upload, saves it to root_files/,
+    and triggers processing (embed + cluster + sync).
+    """
+    try:
+        # Validate file type
+        allowed_extensions = {".txt", ".pdf"}
+        ext = os.path.splitext(file.filename)[1].lower()
+        if ext not in allowed_extensions:
+            return {"error": f"Unsupported file type: {ext}. Only .txt and .pdf are allowed."}
+
+        # Save file to root_files/
+        dest_path = os.path.join(ROOT_FOLDER, file.filename)
+        with open(dest_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+
+        print(f"UPLOAD: Saved {file.filename} to {dest_path}")
+
+        # Process in background thread (extract, embed, cluster, sync)
+        handler = FileHandler()
+        thread = threading.Thread(target=handler.process_file, args=(dest_path,), daemon=True)
+        thread.start()
+
+        return {"status": "success", "filename": file.filename, "path": dest_path}
+
+    except Exception as e:
+        print(f"UPLOAD ERROR: {e}")
+        return {"error": str(e)}
+
 # -----------------------------
 # SEARCH ENDPOINT
 # -----------------------------
 
 @app.post("/search")
 def search_files(request: SearchRequest):
+    try:
+        query_embedding = embedding_model.encode(request.query)
+        results = []
 
-    query_embedding = embedding_model.encode(request.query)
-    results = []
+        for cluster_id, cluster_data in storage.items():
+            for file_path, chunks in cluster_data["files"].items():
+                # Search against chunks (Feature 1)
+                max_sim = -1.0
+                best_chunk = ""
+                
+                for chunk in chunks:
+                    sim = cosine_similarity(
+                        [query_embedding],
+                        [chunk["embedding"]]
+                    )[0][0]
+                    
+                    if sim > max_sim:
+                        max_sim = sim
+                        best_chunk = chunk["text"]
 
-    for cluster_id, cluster_data in storage.items():
-        for file_path, file_embedding in cluster_data["files"].items():
+                results.append({
+                    "file": file_path,
+                    "similarity": float(max_sim),
+                    "snippet": best_chunk[:200] + "...",
+                    "cluster_label": cluster_data.get("label", cluster_id)
+                })
 
-            similarity = cosine_similarity(
-                [query_embedding],
-                [file_embedding]
-            )[0][0]
-
-            results.append({
-                "file": file_path,
-                "similarity": float(similarity),
-                "cluster_label": cluster_data.get("label", cluster_id)
-            })
-
-    results.sort(key=lambda x: x["similarity"], reverse=True)
-
-    return {"results": results[:5]}
+        results.sort(key=lambda x: x["similarity"], reverse=True)
+        return {"results": results[:5]}
+    except Exception as e:
+        print("SEARCH ERROR:", e)
+        return {"results": [], "error": str(e)}
 
 # -----------------------------
 # RAG QA ENDPOINT
@@ -142,48 +207,65 @@ def search_files(request: SearchRequest):
 
 @app.post("/ask")
 def rag_answer(request: SearchRequest):
+    try:
+        query_embedding = embedding_model.encode(request.query)
+        all_chunks = []
 
-    query_embedding = embedding_model.encode(request.query)
-    scored_files = []
+        for cluster_id, cluster_data in storage.items():
+            for file_path, chunks in cluster_data["files"].items():
+                for chunk in chunks:
+                    similarity = cosine_similarity(
+                        [query_embedding],
+                        [chunk["embedding"]]
+                    )[0][0]
+                    
+                    all_chunks.append({
+                        "file": file_path,
+                        "text": chunk["text"],
+                        "similarity": similarity
+                    })
 
-    for cluster_data in storage.values():
-        for file_path, file_embedding in cluster_data["files"].items():
+        # Sort by similarity and take top N (Feature 2)
+        all_chunks.sort(key=lambda x: x["similarity"], reverse=True)
+        top_chunks = all_chunks[:10]  # Take top 10 chunks to filter down
 
-            similarity = cosine_similarity(
-                [query_embedding],
-                [file_embedding]
-            )[0][0]
+        if not top_chunks:
+            return {
+                "answer": "No relevant documents found in knowledge base.",
+                "sources": [],
+                "confidence": 0.0
+            }
 
-            scored_files.append((file_path, similarity))
+        # CALCULATE CONFIDENCE (Feature 4: average similarity of retrieved chunks)
+        # We'll take the top 3 chunks for confidence Calculation
+        confidence = sum(c["similarity"] for c in top_chunks[:3]) / min(3, len(top_chunks))
 
-    scored_files.sort(key=lambda x: x[1], reverse=True)
-    top_files = scored_files[:2]
+        # SMART CONTEXT BUILDER (Feature 2)
+        MAX_CONTEXT_CHARS = 4000
+        context_parts = []
+        chars_used = 0
+        sources = set()
+        seen_chunks = set()
 
-    MAX_CONTEXT_CHARS = 4000
-    context = ""
+        for chunk in top_chunks:
+            # deduplicate (Feature 2)
+            if chunk["text"] in seen_chunks:
+                continue
+            seen_chunks.add(chunk["text"])
 
-    for file_path, _ in top_files:
-        text = read_file_content(file_path)
-        
-        if len(context) + len(text) > MAX_CONTEXT_CHARS:
-            remaining = MAX_CONTEXT_CHARS - len(context)
-            # Find the last space within the remaining limit to avoid cutting mid-word
-            trunc_index = text[:remaining].rfind(" ")
-            if trunc_index == -1:
-                trunc_index = remaining
+            header = f"[File: {os.path.basename(chunk['file'])}]\n"
+            content = f"{chunk['text']}\n\n"
             
-            context += text[:trunc_index] + " [TRUNCATED]..."
-            break
-        else:
-            context += text + "\n---\n"
+            if chars_used + len(header) + len(content) > MAX_CONTEXT_CHARS:
+                break
+                
+            context_parts.append(header + content)
+            chars_used += len(header) + len(content)
+            sources.add(chunk["file"])
 
-    if context.strip() == "":
-        return {
-            "answer": "No relevant documents found in knowledge base.",
-            "sources": []
-        }
+        context = "".join(context_parts)
 
-    prompt = f"""
+        prompt = f"""
 You are an AI assistant for document-based question answering.
 
 Rules:
@@ -200,8 +282,7 @@ Question:
 Answer:
 """
 
-    try:
-        # Configuration for safety and timeout
+        # Gemini Generation
         config = {
             "max_output_tokens": 1024,
             "temperature": 0.1,
@@ -213,25 +294,26 @@ Answer:
             config=config
         )
 
-        if not response or not response.text:
-            answer = "AI returned an empty response. Please try again."
-        else:
-            answer = response.text.strip()
+        answer = response.text.strip() if response and response.text else "AI returned an empty response."
+
+        return {
+            "answer": answer,
+            "sources": list(sources),
+            "confidence": float(confidence)
+        }
 
     except Exception as e:
-        print("LLM ERROR:", e)
+        print("RAG ERROR:", e)
+        # Robust Error Handling (Feature 5)
+        error_msg = "AI service encountered an error."
         if "429" in str(e):
-            answer = "API Rate limit exceeded. Please wait a moment."
-        elif "timeout" in str(e).lower():
-            answer = "Request timed out. The context might be too large or the service is slow."
-        else:
-            answer = "AI service temporarily unavailable or encountered an error."
-
-    return {
-        "answer": answer,
-        "sources": [f[0] for f in top_files],
-        "confidence": "high" if context else "low"
-    }
+            error_msg = "API Rate limit exceeded."
+        return {
+            "answer": error_msg,
+            "sources": [],
+            "confidence": 0.0,
+            "error": str(e)
+        }
 
 # -----------------------------
 # WATCHER THREAD

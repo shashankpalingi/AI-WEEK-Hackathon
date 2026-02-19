@@ -1,0 +1,145 @@
+.dendrogram-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.dendrogram-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.dendro-badge {
+    margin-left: auto;
+    background: var(--badge-bg);
+    color: var(--badge-color);
+    padding: 0.0625rem 0.375rem;
+    border-radius: 8px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    border: 1px solid var(--badge-border);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.dendrogram-container {
+    padding: 0.75rem;
+    overflow-x: auto;
+}
+
+.dendrogram-container::-webkit-scrollbar {
+    height: 4px;
+}
+
+.dendrogram-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dendrogram-container::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 2px;
+}
+
+.dendrogram-svg {
+    display: block;
+    min-width: 100%;
+}
+
+/* ─── Links ─── */
+.dendro-link {
+    stroke: var(--border-color);
+    stroke-width: 1.5;
+    opacity: 0.5;
+}
+
+/* ─── Nodes ─── */
+.dendro-node-root {
+    fill: var(--accent-color);
+    stroke: var(--accent-hover);
+    stroke-width: 1.5;
+}
+
+.dendro-node-branch {
+    fill: var(--accent-light);
+    stroke: var(--accent-color);
+    stroke-width: 1.5;
+    cursor: pointer;
+    transition: fill 0.2s ease;
+}
+
+.dendro-node-branch:hover {
+    fill: var(--accent-color);
+}
+
+.dendro-node-leaf {
+    fill: var(--card-bg);
+    stroke: var(--success-color);
+    stroke-width: 1.5;
+    cursor: pointer;
+    transition: fill 0.2s ease;
+}
+
+.dendro-node-leaf:hover {
+    fill: var(--success-bg);
+}
+
+/* ─── Labels ─── */
+.dendro-label {
+    font-family: 'Inter', sans-serif;
+    pointer-events: none;
+}
+
+.root-label {
+    font-size: 10px;
+    font-weight: 700;
+    fill: #ffffff;
+}
+
+.branch-label {
+    font-size: 10px;
+    font-weight: 600;
+    fill: var(--text-primary);
+}
+
+.leaf-label {
+    font-size: 9px;
+    font-weight: 500;
+    fill: var(--text-secondary);
+}
+
+/* ─── Empty State ─── */
+.dendrogram-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    color: var(--text-tertiary);
+    text-align: center;
+}
+
+.dendrogram-empty .empty-icon {
+    opacity: 0.3;
+    margin-bottom: 0.5rem;
+}
+
+.dendrogram-empty p {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin: 0 0 0.125rem 0;
+}
+
+.dendrogram-empty span {
+    font-size: 0.6875rem;
+}

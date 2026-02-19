@@ -1,0 +1,159 @@
+/* Light Theme (Default) */
+:root,
+[data-theme="light"] {
+    /* Backgrounds */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-gradient-start: #f8fafc;
+    --bg-gradient-end: #f1f5f9;
+
+    /* Navigation */
+    --nav-bg: rgba(255, 255, 255, 0.85);
+    --nav-border: #e2e8f0;
+
+    /* Sidebar */
+    --sidebar-bg: #ffffff;
+
+    /* Glass effect */
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(226, 232, 240, 0.6);
+
+    /* Text colors */
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-tertiary: #94a3b8;
+
+    /* Accent colors */
+    --accent-color: #6366f1;
+    --accent-hover: #4f46e5;
+    --accent-light: rgba(99, 102, 241, 0.1);
+    --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+
+    /* Border colors */
+    --border-color: #e2e8f0;
+    --border-hover: #c7d2fe;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 8px 24px rgba(99, 102, 241, 0.12);
+
+    /* Status colors */
+    --success-color: #10b981;
+    --success-bg: rgba(16, 185, 129, 0.1);
+    --error-color: #ef4444;
+    --error-bg: rgba(239, 68, 68, 0.1);
+    --warning-color: #f59e0b;
+    --warning-bg: rgba(245, 158, 11, 0.1);
+
+    /* Card backgrounds */
+    --card-bg: #ffffff;
+    --card-hover: #f8fafc;
+    --card-border: #e2e8f0;
+    --card-hover-border: #c7d2fe;
+    --card-hover-shadow: rgba(99, 102, 241, 0.08);
+
+    /* Panel backgrounds */
+    --panel-bg: #ffffff;
+    --panel-border: #e2e8f0;
+
+    /* Input backgrounds */
+    --input-bg: #f8fafc;
+    --input-border: #e2e8f0;
+    --input-focus-border: #6366f1;
+    --input-focus-ring: rgba(99, 102, 241, 0.15);
+
+    /* Badge */
+    --badge-bg: rgba(99, 102, 241, 0.1);
+    --badge-color: #6366f1;
+    --badge-border: rgba(99, 102, 241, 0.2);
+
+    /* Scrollbar */
+    --scrollbar-track: #f1f5f9;
+    --scrollbar-thumb: #cbd5e1;
+    --scrollbar-thumb-hover: #94a3b8;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    /* Backgrounds */
+    --bg-primary: #0f172a;
+    --bg-secondary: #020617;
+    --bg-gradient-start: #0f172a;
+    --bg-gradient-end: #020617;
+
+    /* Navigation */
+    --nav-bg: rgba(15, 23, 42, 0.9);
+    --nav-border: rgba(148, 163, 184, 0.1);
+
+    /* Sidebar */
+    --sidebar-bg: rgba(15, 23, 42, 0.8);
+
+    /* Glass effect */
+    --glass-bg: rgba(15, 23, 42, 0.6);
+    --glass-border: rgba(148, 163, 184, 0.1);
+
+    /* Text colors */
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #64748b;
+
+    /* Accent colors */
+    --accent-color: #818cf8;
+    --accent-hover: #6366f1;
+    --accent-light: rgba(129, 140, 248, 0.1);
+    --accent-gradient: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+
+    /* Border colors */
+    --border-color: rgba(148, 163, 184, 0.12);
+    --border-hover: rgba(129, 140, 248, 0.3);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3);
+    --shadow-hover: 0 8px 24px rgba(129, 140, 248, 0.15);
+
+    /* Status colors */
+    --success-color: #34d399;
+    --success-bg: rgba(52, 211, 153, 0.1);
+    --error-color: #f87171;
+    --error-bg: rgba(248, 113, 113, 0.1);
+    --warning-color: #fbbf24;
+    --warning-bg: rgba(251, 191, 36, 0.1);
+
+    /* Card backgrounds */
+    --card-bg: rgba(30, 41, 59, 0.5);
+    --card-hover: rgba(30, 41, 59, 0.7);
+    --card-border: rgba(148, 163, 184, 0.1);
+    --card-hover-border: rgba(129, 140, 248, 0.3);
+    --card-hover-shadow: rgba(129, 140, 248, 0.1);
+
+    /* Panel backgrounds */
+    --panel-bg: rgba(15, 23, 42, 0.8);
+    --panel-border: rgba(148, 163, 184, 0.1);
+
+    /* Input backgrounds */
+    --input-bg: rgba(30, 41, 59, 0.5);
+    --input-border: rgba(148, 163, 184, 0.15);
+    --input-focus-border: #818cf8;
+    --input-focus-ring: rgba(129, 140, 248, 0.2);
+
+    /* Badge */
+    --badge-bg: rgba(129, 140, 248, 0.15);
+    --badge-color: #818cf8;
+    --badge-border: rgba(129, 140, 248, 0.25);
+
+    /* Scrollbar */
+    --scrollbar-track: rgba(15, 23, 42, 0.5);
+    --scrollbar-thumb: rgba(148, 163, 184, 0.2);
+    --scrollbar-thumb-hover: rgba(148, 163, 184, 0.35);
+}
+
+/* Apply theme colors globally */
+body {
+    background: linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+    color: var(--text-primary);
+    transition: background 0.3s ease, color 0.3s ease;
+}
