@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Brain, LayoutDashboard, Bell, User } from 'lucide-react';
+import { Brain, Bell, User } from 'lucide-react';
 import FileUpload from './FileUpload';
 import SearchPanel from './SearchPanel';
 import ChatAssistant from './ChatAssistant';
 import Sidebar from './Sidebar';
-import DendrogramChart from './ui/dendrogram';
+import DendrogramChart from '../ui/dendrogram';
 import ThemeToggle from './ThemeToggle';
 import './SemanticWorkspace.css';
 
@@ -71,32 +71,28 @@ const SemanticWorkspace = () => {
     <div className="semantic-workspace">
       {/* Top Navigation Bar */}
       <nav className="top-nav">
-        <div className="nav-left">
-          <div className="nav-brand">
-            <div className="brand-icon">
-              <Brain size={22} />
+        <div className="nav-content">
+          <div className="nav-left">
+            <div className="nav-brand">
+              <div className="brand-icon">
+                <Brain size={22} />
+              </div>
+              <span className="brand-name">Knowledge Workspace</span>
             </div>
-            <span className="brand-name">Knowledge Workspace</span>
           </div>
-          <div className="nav-divider" />
-          <div className="nav-breadcrumb">
-            <LayoutDashboard size={14} />
-            <span>Dashboard</span>
+
+          <div className="nav-search">
+            <SearchPanel />
           </div>
-        </div>
 
-        {/* Search Bar in Nav */}
-        <div className="nav-search">
-          <SearchPanel />
-        </div>
-
-        <div className="nav-right">
-          <ThemeToggle />
-          <button className="nav-icon-btn" aria-label="Notifications">
-            <Bell size={18} />
-          </button>
-          <div className="nav-avatar">
-            <User size={16} />
+          <div className="nav-right">
+            <ThemeToggle />
+            <button className="nav-icon-btn" aria-label="Notifications">
+              <Bell size={18} />
+            </button>
+            <div className="nav-avatar">
+              <User size={16} />
+            </div>
           </div>
         </div>
       </nav>

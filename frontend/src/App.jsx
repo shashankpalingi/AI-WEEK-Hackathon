@@ -1,18 +1,15 @@
 import React from 'react';
-import SemanticWorkspace from './components/SemanticWorkspace';
-import { ThemeProvider } from './context/ThemeContext';
-import './App.css';
+import { Routes, Route } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
-    <ThemeProvider>
-      <div className="App">
-        <SemanticWorkspace />
-      </div>
-    </ThemeProvider>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+    </Routes>
   );
 }
 
 export default App;
-
-

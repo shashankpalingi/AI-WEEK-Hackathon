@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getClusters } from '../api';
+import { getClusters } from '../../api';
 import { FolderTree, FileText, ChevronRight, ChevronDown, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

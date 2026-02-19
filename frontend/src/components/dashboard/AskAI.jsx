@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { askAI } from '../api';
+import { askAI } from '../../api';
 import { MessageSquare, Send, Sparkles, FileText, Bot, User, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -85,10 +85,10 @@ const AskAI = () => {
                             )}
                             <div className={`max-w-[85%] flex flex-col gap-2 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                                 <div className={`p-4 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
-                                        ? 'bg-blue-600 text-white rounded-tr-none shadow-lg shadow-blue-600/10'
-                                        : msg.error
-                                            ? 'bg-red-500/10 border border-red-500/20 text-red-400 font-medium'
-                                            : 'bg-white/5 border border-white/5 text-slate-200 rounded-tl-none'
+                                    ? 'bg-blue-600 text-white rounded-tr-none shadow-lg shadow-blue-600/10'
+                                    : msg.error
+                                        ? 'bg-red-500/10 border border-red-500/20 text-red-400 font-medium'
+                                        : 'bg-white/5 border border-white/5 text-slate-200 rounded-tl-none'
                                     }`}>
                                     <p className="whitespace-pre-wrap">{msg.content}</p>
                                 </div>

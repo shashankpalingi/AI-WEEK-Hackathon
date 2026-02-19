@@ -1,0 +1,162 @@
+/* ── Landing Page Theme ──────────────────────────────────── */
+/* Scoped under .landing-page to avoid conflicts with dashboard */
+
+.landing-page {
+    /* Core */
+    --lp-background: 0 0% 100%;
+    --lp-foreground: 220 15% 10%;
+    --lp-card: 0 0% 99%;
+    --lp-card-foreground: 220 15% 10%;
+
+    /* Ink-blue as primary */
+    --lp-primary: 222 55% 22%;
+    --lp-primary-foreground: 0 0% 100%;
+
+    --lp-secondary: 220 14% 96%;
+    --lp-secondary-foreground: 220 15% 10%;
+
+    --lp-border: 220 13% 91%;
+    --lp-ink: 220 15% 10%;
+    --lp-ink-light: 220 9% 46%;
+    --lp-sketch-line: 220 13% 82%;
+    --lp-highlight: 42 90% 60%;
+
+    --lp-radius: 0.375rem;
+
+    background: hsl(var(--lp-background));
+    color: hsl(var(--lp-foreground));
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Typography ─────────────────────────────────────────── */
+
+.landing-page h1,
+.landing-page h2,
+.landing-page h3,
+.landing-page h4,
+.landing-page .font-display {
+    font-family: 'Fraunces', Georgia, serif;
+    font-optical-sizing: auto;
+}
+
+/* ── Color utilities (scoped) ───────────────────────────── */
+
+.landing-page .bg-background {
+    background-color: hsl(var(--lp-background));
+}
+
+.landing-page .bg-foreground {
+    background-color: hsl(var(--lp-foreground));
+}
+
+.landing-page .bg-card {
+    background-color: hsl(var(--lp-card));
+}
+
+.landing-page .bg-secondary\/40 {
+    background-color: hsl(var(--lp-secondary) / 0.4);
+}
+
+.landing-page .text-ink {
+    color: hsl(var(--lp-ink));
+}
+
+.landing-page .text-ink-light {
+    color: hsl(var(--lp-ink-light));
+}
+
+.landing-page .text-foreground {
+    color: hsl(var(--lp-foreground));
+}
+
+.landing-page .text-foreground\/60 {
+    color: hsl(var(--lp-foreground) / 0.6);
+}
+
+.landing-page .text-primary-foreground {
+    color: hsl(var(--lp-primary-foreground));
+}
+
+.landing-page .text-border {
+    color: hsl(var(--lp-border));
+}
+
+.landing-page .text-highlight {
+    color: hsl(var(--lp-highlight));
+}
+
+.landing-page .border-border {
+    border-color: hsl(var(--lp-border));
+}
+
+.landing-page .border-foreground {
+    border-color: hsl(var(--lp-foreground));
+}
+
+.landing-page .border-foreground\/20 {
+    border-color: hsl(var(--lp-foreground) / 0.2);
+}
+
+.landing-page .border-foreground\/30 {
+    border-color: hsl(var(--lp-foreground) / 0.3);
+}
+
+.landing-page .focus\:border-foreground\/30:focus {
+    border-color: hsl(var(--lp-foreground) / 0.3);
+}
+
+.landing-page .hover\:text-ink:hover {
+    color: hsl(var(--lp-ink));
+}
+
+.landing-page .hover\:border-foreground\/30:hover {
+    border-color: hsl(var(--lp-foreground) / 0.3);
+}
+
+.landing-page .hover\:border-foreground\/20:hover {
+    border-color: hsl(var(--lp-foreground) / 0.2);
+}
+
+.landing-page .group:hover .group-hover\:border-foreground\/30 {
+    border-color: hsl(var(--lp-foreground) / 0.3);
+}
+
+/* ── Custom utilities ───────────────────────────────────── */
+
+.landing-page .sketch-underline {
+    position: relative;
+}
+
+.landing-page .sketch-underline::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    width: 100%;
+    height: 3px;
+    background: hsl(var(--lp-highlight));
+    border-radius: 2px;
+    transform: rotate(-0.5deg);
+}
+
+.landing-page .ink-border {
+    border: 1.5px solid hsl(var(--lp-sketch-line));
+}
+
+.landing-page .dash-border {
+    border: 1.5px dashed hsl(var(--lp-sketch-line));
+}
+
+/* ── Nav backdrop ───────────────────────────────────────── */
+
+.landing-page .bg-background\/90 {
+    background-color: hsl(var(--lp-background) / 0.9);
+}
+
+/* ── Smooth scroll ──────────────────────────────────────── */
+
+.landing-page {
+    scroll-behavior: smooth;
+}

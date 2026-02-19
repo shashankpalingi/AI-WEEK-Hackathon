@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getWebSocketUrl } from '../api';
+import { getWebSocketUrl } from '../../api';
 import { Activity, Radio } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

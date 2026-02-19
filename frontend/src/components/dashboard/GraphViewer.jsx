@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
-import { getClusters } from '../api';
+import { getClusters } from '../../api';
 import { Share2, Maximize2, RefreshCw, ZoomIn, ZoomOut, Target } from 'lucide-react';
 
 const GraphViewer = () => {

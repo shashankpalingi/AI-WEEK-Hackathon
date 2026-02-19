@@ -5,6 +5,7 @@
 
 .search-form {
     margin: 0;
+    width: 100%;
 }
 
 .search-input-wrapper {
@@ -17,6 +18,7 @@
     padding: 0 0.5rem 0 0.75rem;
     transition: all 0.2s ease;
     height: 36px;
+    width: 100%;
 }
 
 .search-input-wrapper:focus-within {

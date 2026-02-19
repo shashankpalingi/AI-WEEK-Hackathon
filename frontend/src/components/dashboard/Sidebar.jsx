@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Zap, Layers, FileText, BarChart3, FolderTree } from 'lucide-react';
-import { FilesystemItem } from './ui/filesystem-item';
+import { FilesystemItem } from '../ui/filesystem-item';
 import './Sidebar.css';
 
 const Sidebar = ({ files, status }) => {

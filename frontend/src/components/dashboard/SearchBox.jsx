@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { semanticSearch } from '../api';
+import { semanticSearch } from '../../api';
 import { Search, FileText, Target, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
