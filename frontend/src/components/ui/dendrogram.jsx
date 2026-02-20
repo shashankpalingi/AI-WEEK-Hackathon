@@ -139,9 +139,10 @@ const DendrogramChart = React.memo(({ files }) => {
             <div className="dendrogram-container" ref={containerRef}>
                 <svg
                     viewBox={viewBox}
-                    width="100%"
+                    width={svgWidth + padX * 2}
                     height={svgHeight + padY * 2}
                     className="dendrogram-svg"
+                    style={{ maxWidth: '100%' }}
                 >
                     {/* Links */}
                     {links.map((link, i) => {
@@ -167,6 +168,10 @@ const DendrogramChart = React.memo(({ files }) => {
                     {nodes.map((node, i) => {
                         const isRoot = node.depth === 0;
                         const isLeaf = !node.children || node.children.length === 0;
+                        const displayName = node.name.length > 18 ? node.name.slice(0, 16) + '…' : node.name;
+                        const textWidth = displayName.length * 6;
+                        const rectW = Math.max(50, textWidth + 14);
+                        const rectH = 28;
 
                         return (
                             <motion.g
@@ -175,31 +180,32 @@ const DendrogramChart = React.memo(({ files }) => {
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ duration: 0.4, delay: 0.2 + i * 0.05, type: 'spring', bounce: 0.3 }}
                             >
-                                {isRoot ? (
-                                    <rect
-                                        x={node.x - 24}
-                                        y={node.y - 12}
-                                        width={48}
-                                        height={24}
-                                        rx={6}
-                                        className="dendro-node-root"
-                                    />
-                                ) : (
+                                {isLeaf ? (
                                     <circle
                                         cx={node.x}
                                         cy={node.y}
-                                        r={isLeaf ? 8 : 12}
-                                        className={isLeaf ? 'dendro-node-leaf' : 'dendro-node-branch'}
+                                        r={8}
+                                        className="dendro-node-leaf"
+                                    />
+                                ) : (
+                                    <rect
+                                        x={node.x - rectW / 2}
+                                        y={node.y - rectH / 2}
+                                        width={rectW}
+                                        height={rectH}
+                                        rx={rectH / 2}
+                                        className={isRoot ? 'dendro-node-root' : 'dendro-node-branch'}
                                     />
                                 )}
 
                                 <text
                                     x={node.x}
-                                    y={isRoot ? node.y + 1 : isLeaf ? node.y + 24 : node.y - 20}
+                                    y={isLeaf ? node.y + 24 : node.y + 1}
                                     textAnchor="middle"
+                                    dominantBaseline={isLeaf ? "auto" : "middle"}
                                     className={`dendro-label ${isRoot ? 'root-label' : isLeaf ? 'leaf-label' : 'branch-label'}`}
                                 >
-                                    {node.name.length > 18 ? node.name.slice(0, 16) + '…' : node.name}
+                                    {displayName}
                                 </text>
                             </motion.g>
                         );

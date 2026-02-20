@@ -163,6 +163,113 @@ async def upload_file(file: UploadFile = File(...)):
         return {"error": str(e)}
 
 # -----------------------------
+# DELETE ENDPOINT
+# -----------------------------
+
+@app.delete("/files/{filename}")
+async def delete_file(filename: str):
+    """
+    Deletes a file by filename from disk and storage.
+    Searches recursively in root_files/ since files may be in cluster subfolders.
+    """
+    try:
+        # Find the file recursively in root_files
+        file_path = None
+        for root, _, files in os.walk(ROOT_FOLDER):
+            if filename in files:
+                file_path = os.path.join(root, filename)
+                break
+
+        if not file_path:
+            return {"error": f"File '{filename}' not found"}
+
+        abs_path = os.path.abspath(file_path)
+
+        # Remove from storage
+        removed = False
+        for cluster_id, cluster_data in storage.items():
+            if abs_path in cluster_data["files"]:
+                cluster_data["files"].pop(abs_path)
+                if "metadata" in cluster_data and abs_path in cluster_data["metadata"]:
+                    cluster_data["metadata"].pop(abs_path)
+                removed = True
+                print(f"DELETE: Removed {filename} from cluster {cluster_id}")
+                break
+
+        # Delete physical file
+        if os.path.exists(abs_path):
+            os.remove(abs_path)
+            print(f"DELETE: Removed file from disk: {abs_path}")
+
+        # Save and sync
+        if removed:
+            from cluster_engine import save_storage, sync_folders
+            save_storage(storage)
+            sync_folders(ROOT_FOLDER)
+
+        return {"status": "success", "filename": filename, "removed_from_index": removed}
+
+    except Exception as e:
+        print(f"DELETE ERROR: {e}")
+        return {"error": str(e)}
+
+# -----------------------------
+# UPDATE ENDPOINT
+# -----------------------------
+
+@app.put("/files/{filename}")
+async def update_file(filename: str, file: UploadFile = File(...)):
+    """
+    Replaces an existing file with a new upload and re-processes it.
+    The file is found by its original name, replaced on disk,
+    then re-embedded and re-clustered.
+    """
+    try:
+        # Validate file type
+        allowed_extensions = {".txt", ".pdf"}
+        ext = os.path.splitext(file.filename)[1].lower()
+        if ext not in allowed_extensions:
+            return {"error": f"Unsupported file type: {ext}. Only .txt and .pdf are allowed."}
+
+        # Find the existing file recursively
+        existing_path = None
+        for root, _, files in os.walk(ROOT_FOLDER):
+            if filename in files:
+                existing_path = os.path.join(root, filename)
+                break
+
+        if not existing_path:
+            return {"error": f"File '{filename}' not found"}
+
+        abs_path = os.path.abspath(existing_path)
+
+        # Remove old entry from storage (it will be re-added by process_file)
+        for cluster_data in storage.values():
+            if abs_path in cluster_data["files"]:
+                cluster_data["files"].pop(abs_path)
+                if "metadata" in cluster_data and abs_path in cluster_data["metadata"]:
+                    cluster_data["metadata"].pop(abs_path)
+                break
+
+        # Overwrite the file on disk
+        with open(abs_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+
+        print(f"UPDATE: Replaced {filename} at {abs_path}")
+
+        # Re-process in background thread (extract, embed, cluster, sync)
+        handler = FileHandler()
+        thread = threading.Thread(target=handler.process_file, args=(abs_path,), daemon=True)
+        thread.start()
+
+        return {"status": "success", "filename": filename, "path": abs_path}
+
+    except Exception as e:
+        print(f"UPDATE ERROR: {e}")
+        return {"error": str(e)}
+
+# -----------------------------
 # SEARCH ENDPOINT
 # -----------------------------
 

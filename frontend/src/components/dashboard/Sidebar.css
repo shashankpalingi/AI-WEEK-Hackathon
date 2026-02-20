@@ -165,3 +165,72 @@
     font-size: 0.6875rem;
     font-weight: 500;
 }
+
+/* ─── File Action Buttons (hover-reveal) ─── */
+.file-actions-inline {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.filesystem-item-row:hover .file-actions-inline {
+    opacity: 1;
+}
+
+.file-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.file-action-btn:hover {
+    background: var(--card-hover);
+}
+
+.file-action-btn.update-btn:hover {
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.file-action-btn.delete-btn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.file-action-btn.delete-btn.confirm {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+    animation: pulse-delete 0.6s ease infinite alternate;
+}
+
+.file-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@keyframes pulse-delete {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spin-animation {
+    animation: spin 0.8s linear infinite;
+}

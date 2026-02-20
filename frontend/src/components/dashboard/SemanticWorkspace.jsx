@@ -101,7 +101,7 @@ const SemanticWorkspace = () => {
       <div className="main-content">
         {/* Left Sidebar - File Tree & Status */}
         <aside className="left-panel">
-          <Sidebar files={files} status={systemStatus} />
+          <Sidebar files={files} status={systemStatus} onRefresh={handleUploadSuccess} />
         </aside>
 
         {/* Center - Knowledge Workspace */}

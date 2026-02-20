@@ -33,8 +33,10 @@
 }
 
 .dendrogram-container {
-    padding: 0.75rem;
+    padding-left: 4rem;
     overflow-x: auto;
+    display: flex;
+    justify-content: center;
 }
 
 .dendrogram-container::-webkit-scrollbar {
@@ -52,7 +54,6 @@
 
 .dendrogram-svg {
     display: block;
-    min-width: 100%;
 }
 
 /* ─── Links ─── */
@@ -108,7 +109,13 @@
 .branch-label {
     font-size: 10px;
     font-weight: 600;
-    fill: var(--text-primary);
+    fill: var(--accent-color);
+    transition: fill 0.2s ease;
+}
+
+.dendro-node-branch:hover+text .branch-label,
+.dendro-node-branch:hover~text.branch-label {
+    fill: #ffffff;
 }
 
 .leaf-label {

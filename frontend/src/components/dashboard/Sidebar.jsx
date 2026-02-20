@@ -1,10 +1,48 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { Zap, Layers, FileText, BarChart3, FolderTree } from 'lucide-react';
 import { FilesystemItem } from '../ui/filesystem-item';
 import './Sidebar.css';
 
-const Sidebar = ({ files, status }) => {
+const Sidebar = ({ files, status, onRefresh }) => {
     const isOnline = status?.status === 'running' || status?.status === 'online';
+
+    const handleDelete = useCallback(async (fileName) => {
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/files/${encodeURIComponent(fileName)}`, {
+                method: 'DELETE',
+            });
+            const data = await response.json();
+            if (data.error) {
+                console.error('Delete failed:', data.error);
+                return;
+            }
+            console.log('Deleted:', fileName);
+            if (onRefresh) onRefresh();
+        } catch (error) {
+            console.error('Delete error:', error);
+        }
+    }, [onRefresh]);
+
+    const handleUpdate = useCallback(async (fileName, newFile) => {
+        try {
+            const formData = new FormData();
+            formData.append('file', newFile);
+
+            const response = await fetch(`http://127.0.0.1:8000/files/${encodeURIComponent(fileName)}`, {
+                method: 'PUT',
+                body: formData,
+            });
+            const data = await response.json();
+            if (data.error) {
+                console.error('Update failed:', data.error);
+                return;
+            }
+            console.log('Updated:', fileName);
+            if (onRefresh) onRefresh();
+        } catch (error) {
+            console.error('Update error:', error);
+        }
+    }, [onRefresh]);
 
     // Build tree from files grouped by cluster_label
     const treeNodes = useMemo(() => {
@@ -72,6 +110,8 @@ const Sidebar = ({ files, status }) => {
                                     node={node}
                                     key={node.name}
                                     animated
+                                    onDelete={handleDelete}
+                                    onUpdate={handleUpdate}
                                 />
                             ))}
                         </ul>
