@@ -3,29 +3,30 @@
 
 .landing-page {
     /* Core */
-    --lp-background: 0 0% 100%;
+    --lp-background: 45 30% 98%;
     --lp-foreground: 220 15% 10%;
-    --lp-card: 0 0% 99%;
+    --lp-card: 42 25% 97%;
     --lp-card-foreground: 220 15% 10%;
 
     /* Ink-blue as primary */
     --lp-primary: 222 55% 22%;
     --lp-primary-foreground: 0 0% 100%;
 
-    --lp-secondary: 220 14% 96%;
+    --lp-secondary: 40 20% 95%;
     --lp-secondary-foreground: 220 15% 10%;
 
-    --lp-border: 220 13% 91%;
+    --lp-border: 35 15% 85%;
     --lp-ink: 220 15% 10%;
     --lp-ink-light: 220 9% 46%;
-    --lp-sketch-line: 220 13% 82%;
+    --lp-sketch-line: 30 10% 75%;
     --lp-highlight: 42 90% 60%;
+    --lp-paper: 42 30% 96%;
 
     --lp-radius: 0.375rem;
 
-    background: hsl(var(--lp-background));
+    background: #ffffff;
     color: hsl(var(--lp-foreground));
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Architects Daughter', 'Plus Jakarta Sans', system-ui, sans-serif;
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
 }
@@ -37,126 +38,340 @@
 .landing-page h3,
 .landing-page h4,
 .landing-page .font-display {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Caveat', 'Fraunces', Georgia, serif;
+    font-weight: 700;
     font-optical-sizing: auto;
+    letter-spacing: -0.01em;
 }
 
-/* ── Color utilities (scoped) ───────────────────────────── */
-
-.landing-page .bg-background {
-    background-color: hsl(var(--lp-background));
+.landing-page h1 {
+    font-size: 4rem;
+    line-height: 1.1;
 }
 
-.landing-page .bg-foreground {
-    background-color: hsl(var(--lp-foreground));
+/* Handwritten annotation style */
+.landing-page .font-handwritten {
+    font-family: 'Caveat', cursive;
+    font-weight: 600;
 }
 
-.landing-page .bg-card {
-    background-color: hsl(var(--lp-card));
-}
-
-.landing-page .bg-secondary\/40 {
-    background-color: hsl(var(--lp-secondary) / 0.4);
-}
-
-.landing-page .text-ink {
-    color: hsl(var(--lp-ink));
-}
-
-.landing-page .text-ink-light {
-    color: hsl(var(--lp-ink-light));
-}
-
-.landing-page .text-foreground {
-    color: hsl(var(--lp-foreground));
-}
-
-.landing-page .text-foreground\/60 {
-    color: hsl(var(--lp-foreground) / 0.6);
-}
-
-.landing-page .text-primary-foreground {
-    color: hsl(var(--lp-primary-foreground));
-}
-
-.landing-page .text-border {
-    color: hsl(var(--lp-border));
-}
-
-.landing-page .text-highlight {
-    color: hsl(var(--lp-highlight));
-}
-
-.landing-page .border-border {
-    border-color: hsl(var(--lp-border));
-}
-
-.landing-page .border-foreground {
-    border-color: hsl(var(--lp-foreground));
-}
-
-.landing-page .border-foreground\/20 {
-    border-color: hsl(var(--lp-foreground) / 0.2);
-}
-
-.landing-page .border-foreground\/30 {
-    border-color: hsl(var(--lp-foreground) / 0.3);
-}
-
-.landing-page .focus\:border-foreground\/30:focus {
-    border-color: hsl(var(--lp-foreground) / 0.3);
-}
-
-.landing-page .hover\:text-ink:hover {
-    color: hsl(var(--lp-ink));
-}
-
-.landing-page .hover\:border-foreground\/30:hover {
-    border-color: hsl(var(--lp-foreground) / 0.3);
-}
-
-.landing-page .hover\:border-foreground\/20:hover {
-    border-color: hsl(var(--lp-foreground) / 0.2);
-}
-
-.landing-page .group:hover .group-hover\:border-foreground\/30 {
-    border-color: hsl(var(--lp-foreground) / 0.3);
-}
-
-/* ── Custom utilities ───────────────────────────────────── */
+/* ── Sketch-style underlines & decorations ──────────────── */
 
 .landing-page .sketch-underline {
     position: relative;
+    display: inline-block;
 }
 
 .landing-page .sketch-underline::after {
     content: '';
     position: absolute;
-    left: 0;
-    bottom: -4px;
-    width: 100%;
-    height: 3px;
-    background: hsl(var(--lp-highlight));
-    border-radius: 2px;
-    transform: rotate(-0.5deg);
+    left: -4px;
+    bottom: -6px;
+    width: calc(100% + 8px);
+    height: 8px;
+    background: hsl(var(--lp-highlight) / 0.7);
+    border-radius: 40% 60% 50% 45% / 80% 40% 70% 50%;
+    transform: rotate(-1deg) scaleY(0.7);
+    z-index: -1;
+}
+
+/* Rough circle highlight */
+.landing-page .sketch-circle {
+    position: relative;
+}
+
+.landing-page .sketch-circle::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border: 2.5px solid hsl(var(--lp-highlight) / 0.5);
+    border-radius: 45% 55% 50% 48% / 52% 45% 55% 50%;
+    transform: rotate(-2deg);
+    pointer-events: none;
+}
+
+/* Hand-drawn box shadow */
+.landing-page .sketch-box {
+    border: 2.5px solid hsl(var(--lp-sketch-line));
+    border-radius: 20px 12px 24px 8px / 10px 22px 8px 18px;
+    box-shadow:
+        4px 4px 0 hsl(var(--lp-sketch-line) / 0.25),
+        -1px -1px 0 hsl(var(--lp-sketch-line) / 0.08);
+    position: relative;
+}
+
+/* Wobbly card borders */
+.landing-page .sketch-card {
+    border: 2px solid hsl(var(--lp-sketch-line));
+    border-radius: 22px 10px 18px 14px / 14px 20px 10px 16px;
+    background: hsl(var(--lp-card));
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.landing-page .sketch-card:hover {
+    transform: translateY(-2px) rotate(-0.3deg);
+    box-shadow: 4px 5px 0 hsl(var(--lp-sketch-line) / 0.2);
 }
 
 .landing-page .ink-border {
-    border: 1.5px solid hsl(var(--lp-sketch-line));
+    border: 2.5px solid hsl(var(--lp-sketch-line));
+    border-radius: 16px 20px 14px 22px / 22px 14px 18px 16px;
 }
 
 .landing-page .dash-border {
-    border: 1.5px dashed hsl(var(--lp-sketch-line));
+    border: 2.5px dashed hsl(var(--lp-sketch-line));
+    border-radius: 24px 14px 20px 10px / 10px 18px 14px 24px;
+}
+
+/* ── Hand-drawn horizontal rules ────────────────────────── */
+
+.landing-page .sketch-line {
+    height: 2px;
+    background: none;
+    border: none;
+    position: relative;
+}
+
+.landing-page .sketch-line::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 2px;
+    background: hsl(var(--lp-sketch-line) / 0.5);
+    border-radius: 50%;
+    transform: scaleY(1.5) rotate(-0.3deg);
+    clip-path: polygon(0% 30%, 5% 60%, 12% 20%, 20% 50%, 28% 25%, 35% 55%,
+            42% 30%, 50% 60%, 58% 25%, 65% 55%, 72% 30%, 80% 50%,
+            88% 25%, 95% 60%, 100% 35%,
+            100% 70%, 95% 40%, 88% 75%, 80% 50%, 72% 70%, 65% 45%,
+            58% 75%, 50% 40%, 42% 70%, 35% 45%, 28% 75%, 20% 50%,
+            12% 80%, 5% 40%, 0% 70%);
+}
+
+/* ── Section divider (hand-drawn wavy line) ─────────────── */
+
+.landing-page .section-divider {
+    position: relative;
+    height: 40px;
+    overflow: visible;
+}
+
+/* ── Sketch-style step numbers ──────────────────────────── */
+
+.landing-page .step-number {
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 5rem;
+    line-height: 1;
+    color: hsl(var(--lp-sketch-line) / 0.5);
+    position: relative;
+}
+
+.landing-page .step-number::after {
+    content: '';
+    position: absolute;
+    bottom: 10px;
+    left: -5px;
+    width: calc(100% + 10px);
+    height: 3px;
+    background: hsl(var(--lp-highlight) / 0.3);
+    border-radius: 50%;
+    transform: rotate(-2deg);
+}
+
+/* ── Floating annotation badges ─────────────────────────── */
+
+.landing-page .annotation-badge {
+    font-family: 'Caveat', cursive;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: hsl(var(--lp-ink-light));
+    background: hsl(var(--lp-paper));
+    border: 1.5px solid hsl(var(--lp-sketch-line) / 0.5);
+    border-radius: 8px 12px 8px 4px / 4px 8px 12px 8px;
+    padding: 2px 10px;
+    transform: rotate(-2deg);
+    box-shadow: 2px 2px 0 hsl(var(--lp-sketch-line) / 0.15);
+}
+
+/* ── Hand-drawn arrow (CSS-only) ────────────────────────── */
+
+.landing-page .sketch-arrow-down {
+    position: relative;
+    width: 2px;
+    height: 30px;
+    background: hsl(var(--lp-sketch-line));
+    margin: 0 auto;
+    transform: rotate(2deg);
+    border-radius: 2px;
+}
+
+.landing-page .sketch-arrow-down::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid hsl(var(--lp-sketch-line));
 }
 
 /* ── Nav backdrop ───────────────────────────────────────── */
 
-.landing-page .bg-background\/90 {
-    background-color: hsl(var(--lp-background) / 0.9);
+.landing-page nav.sketch-nav {
+    background: hsl(var(--lp-background) / 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: none;
+    padding-bottom: 6px;
+}
+
+/* Wavy border under nav */
+.landing-page nav.sketch-nav::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 1200 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 4 Q30 0 60 4 Q90 8 120 4 Q150 0 180 4 Q210 8 240 4 Q270 0 300 4 Q330 8 360 4 Q390 0 420 4 Q450 8 480 4 Q510 0 540 4 Q570 8 600 4 Q630 0 660 4 Q690 8 720 4 Q750 0 780 4 Q810 8 840 4 Q870 0 900 4 Q930 8 960 4 Q990 0 1020 4 Q1050 8 1080 4 Q1110 0 1140 4 Q1170 8 1200 4' fill='none' stroke='%23b8b0a4' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x;
+    background-size: 600px 8px;
+}
+
+/* ── Feature icon containers ────────────────────────────── */
+
+.landing-page .feature-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2.5px solid hsl(var(--lp-sketch-line));
+    border-radius: 18px 22px 14px 24px / 24px 12px 20px 16px;
+    background: hsl(var(--lp-paper));
+    position: relative;
+}
+
+.landing-page .feature-icon::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    border: 1px solid hsl(var(--lp-sketch-line) / 0.2);
+    transform: translate(2px, 2px);
+    pointer-events: none;
+}
+
+/* ── CTA button sketch style ───────────────────────────── */
+
+.landing-page .sketch-button {
+    position: relative;
+    border: 2.5px solid hsl(var(--lp-foreground));
+    border-radius: 18px 8px 20px 10px / 10px 18px 8px 16px;
+    background: hsl(var(--lp-foreground));
+    color: hsl(var(--lp-primary-foreground));
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+    padding: 12px 28px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 3px 4px 0 hsl(var(--lp-sketch-line) / 0.3);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.landing-page .sketch-button:hover {
+    transform: translate(-1px, -2px);
+    box-shadow: 5px 6px 0 hsl(var(--lp-sketch-line) / 0.3);
+}
+
+.landing-page .sketch-button:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 2px 0 hsl(var(--lp-sketch-line) / 0.3);
+}
+
+.landing-page .sketch-button-outline {
+    position: relative;
+    border: 2.5px solid hsl(var(--lp-sketch-line));
+    border-radius: 14px 20px 16px 8px / 8px 16px 20px 14px;
+    background: transparent;
+    color: hsl(var(--lp-ink-light));
+    font-family: 'Caveat', cursive;
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 12px 28px;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.landing-page .sketch-button-outline:hover {
+    border-color: hsl(var(--lp-foreground) / 0.4);
+    transform: translateY(-1px);
 }
 
 /* ── Smooth scroll ──────────────────────────────────────── */
 
 .landing-page {
     scroll-behavior: smooth;
+}
+
+/* ── Illustration section backgrounds ───────────────────── */
+
+.landing-page .sketch-section-alt {
+    background:
+        linear-gradient(160deg, hsl(40 25% 96% / 0.6), hsl(220 20% 97% / 0.4)),
+        hsl(var(--lp-paper));
+}
+
+/* ── Animated floating elements ─────────────────────────── */
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-8px) rotate(1deg);
+    }
+}
+
+@keyframes float-slow {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-5px) rotate(-0.5deg);
+    }
+}
+
+.landing-page .float-anim {
+    animation: float 6s ease-in-out infinite;
+}
+
+.landing-page .float-anim-slow {
+    animation: float-slow 8s ease-in-out infinite;
+}
+
+/* ── Sketch grid paper effect for illustration areas ────── */
+
+.landing-page .sketch-grid {
+    background-image:
+        linear-gradient(hsl(var(--lp-sketch-line) / 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, hsl(var(--lp-sketch-line) / 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
 }
